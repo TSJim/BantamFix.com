@@ -29,7 +29,7 @@ Fusion uses a URN (Uniform Resource Name) attribute to distinguish these librari
 
 | Before (Broken) | After (Fixed) |
 |-----------------|---------------|
-| ![Missing headers](repair-tool/screenshot-before.png) | ![All headers visible](repair-tool/screenshot-after.png) |
+| <img src="repair-tool/screenshot-before.png" alt="Missing headers" height="300"> | <img src="repair-tool/screenshot-after.png" alt="All headers visible" height="300"> |
 
 The red circles show where 4-pin and 5-pin headers should appear but don't render in Bantam Tools.
 
