@@ -1,17 +1,23 @@
 Dear Bantam Tools Team,
 
-I'm a Bantam user who loves your machine and software. I've been using it to
-mill PCBs designed in Fusion 360, and recently ran into an issue where some
-of my components weren't showing up when I imported my BRD files.
+I'm a long-time Bantam user - one of the very first OtherMill customers, in
+fact. I currently run three OtherMill units: two standard machines and one Pro.
+I love your machines and have been using them to mill PCBs designed in Fusion
+360 for years.
 
-After some investigation, I discovered the root cause: when Fusion 360 exports
-a BRD file with components from multiple library sources, it creates duplicate
-library entries with the same name but different identifiers. Bantam's parser
-doesn't handle this correctly, causing some components to silently disappear.
+I'm writing about a bug that causes components to silently disappear when
+importing BRD files from Fusion 360. I first reported this issue to your
+technical support on May 18, 2022 (from jim@jimsgear.com) and was told it was
+a known issue. Since it still hasn't been fixed nearly three years later, I
+decided to dig deeper and put together this package to help your engineering
+team resolve it.
 
-I reported this issue about a year ago and was told it was a known issue. Since
-it still hasn't been fixed, I decided to dig deeper and put together this
-package to help your engineering team resolve it.
+THE BUG
+-------
+When Fusion 360 exports a BRD file with components from multiple library
+sources, it creates duplicate library entries with the same name but different
+URN identifiers. Bantam's parser doesn't handle this correctly - it keeps only
+one library and discards the others, causing components to silently disappear.
 
 RESOURCES
 ---------
