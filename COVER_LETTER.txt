@@ -13,19 +13,28 @@ I reported this issue about a year ago and was told it was a known issue. Since
 it still hasn't been fixed, I decided to dig deeper and put together this
 package to help your engineering team resolve it.
 
-WHAT'S INCLUDED
----------------
-- A clear explanation of the bug and why it happens
-- Test files that reproduce the issue
-- A working web-based repair tool (with documented source code)
-- Implementation guidance with pseudocode for your engineers
+RESOURCES
+---------
+I've created two public resources to help users and your engineering team:
 
-I've also published the repair tool at https://bantamfix.com so other users
-can fix their files while waiting for an official fix.
+  Web Repair Tool:  https://bantamfix.com
+  GitHub Repo:      https://github.com/TSJim/BantamFix.com
+
+The web tool lets users fix their BRD files immediately (all processing
+happens in the browser - no uploads). The GitHub repo contains complete
+documentation, test files, and source code your engineers can reference.
+
+WHAT'S INCLUDED IN THE GITHUB REPO
+----------------------------------
+- Clear explanation of the bug and root cause analysis
+- Test files that reproduce the issue (BROKEN.brd and FIXED.brd)
+- Working repair tool with extensively documented source code
+- Implementation guidance with pseudocode for your engineers
+- Before/after screenshots showing the problem
 
 The fix itself is straightforward - essentially just merging same-named
-libraries when loading the file. The repair tool I built does exactly this,
-and the source code can serve as a reference implementation.
+libraries when loading the file. The brd-fixer.js source code shows exactly
+how to do this and can serve as a reference implementation.
 
 WHY THIS MATTERS
 ----------------
@@ -52,9 +61,9 @@ Best regards,
 
 
 --------------------------------------------------------------------------------
-ATTACHMENTS: bantam-bug-presentation.zip containing:
-  - 00_READ_ME_FIRST.txt (start here)
-  - 01-04 documentation files
-  - repair-tool/ (working web tool with source code)
-  - test-files/ (BRD files and screenshots to reproduce the bug)
+LINKS:
+  Live Repair Tool:  https://bantamfix.com
+  GitHub Repository: https://github.com/TSJim/BantamFix.com
+
+The GitHub repo contains all documentation, source code, and test files.
 --------------------------------------------------------------------------------
