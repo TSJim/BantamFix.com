@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About BantamFix - Why This Tool Exists</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.8;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        h2 {
+            color: #34495e;
+            margin-top: 40px;
+        }
+
+        a {
+            color: #3498db;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 30px;
+            text-decoration: none;
+            color: #3498db;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            background: #e8e8e8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+
+        .callout {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        footer {
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="back-link">&larr; Back to BantamFix</a>
+
+    <h1>Why BantamFix Exists</h1>
+
+    <p>
+        If you're here, you probably just spent way too long trying to figure out why
+        some of your components aren't showing up in Bantam Tools. I've been there.
+    </p>
+
+    <h2>The Problem</h2>
+
+    <p>
+        When you design a PCB in <strong>Fusion 360</strong> and add components from different
+        library sources (local libraries, Autodesk cloud libraries, team libraries), Fusion
+        saves them as separate entries in the BRD file - even if they have the same library name.
+    </p>
+
+    <p>
+        Fusion uses a "URN" (Uniform Resource Name) to tell these libraries apart:
+    </p>
+
+    <pre>&lt;library name="pinhead-2"&gt;                    &lt;!-- local --&gt;
+&lt;library name="pinhead-2" urn="urn:adsk..."&gt;  &lt;!-- cloud --&gt;</pre>
+
+    <p>
+        <strong>Bantam Tools ignores these URN identifiers.</strong> When it sees multiple libraries
+        with the same name, it only keeps one of them. Components from the discarded libraries
+        simply vanish - no error message, no warning.
+    </p>
+
+    <h2>Why It's Easy to Trigger</h2>
+
+    <p>
+        In Fusion 360's component browser, when you search for "pin header" or "1x04",
+        you see results from all your library sources mixed together. They all show the
+        same library name. It's very easy to grab components from different sources
+        without realizing it.
+    </p>
+
+    <div class="callout">
+        <strong>The silent failure is the worst part.</strong> You design your board, export it,
+        import it into Bantam, and some components just... aren't there. If you don't notice
+        before milling, you've wasted time and material.
+    </div>
+
+    <h2>The Fix</h2>
+
+    <p>
+        This tool consolidates all libraries with the same name into a single library
+        containing all the packages. Simple as that.
+    </p>
+
+    <p>
+        Bantam Tools could (and should) do this automatically when loading a BRD file.
+        Until they fix it, this tool does the job.
+    </p>
+
+    <h2>Is This Bantam's Fault?</h2>
+
+    <p>
+        Yes. The BRD file format explicitly supports multiple libraries with the same name,
+        differentiated by URN. Fusion 360 exports valid files. Bantam's parser doesn't
+        handle them correctly.
+    </p>
+
+    <p>
+        I've reported this bug to Bantam and provided them with:
+    </p>
+
+    <ul>
+        <li>Detailed technical analysis</li>
+        <li>Test files that reproduce the issue</li>
+        <li>This tool's source code as a reference implementation</li>
+        <li>Pseudocode showing exactly how to fix their parser</li>
+    </ul>
+
+    <p>
+        Hopefully they'll fix it soon and this site will become obsolete. Until then,
+        <a href="index.html">the tool is here to help</a>.
+    </p>
+
+    <h2>Privacy</h2>
+
+    <p>
+        Your BRD files never leave your browser. All processing happens locally using
+        JavaScript. I don't collect any data, have no analytics, and don't even have
+        a server-side component. View the <a href="brd-fixer.js">source code</a> yourself.
+    </p>
+
+    <footer>
+        <p>
+            <strong>bantamfix.com</strong><br>
+            Built by a frustrated Bantam user who just wanted their headers to show up.
+        </p>
+    </footer>
+</body>
+</html>

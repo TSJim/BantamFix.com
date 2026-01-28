@@ -1,0 +1,60 @@
+Dear Bantam Tools Team,
+
+I'm a Bantam user who loves your machine and software. I've been using it to
+mill PCBs designed in Fusion 360, and recently ran into an issue where some
+of my components weren't showing up when I imported my BRD files.
+
+After some investigation, I discovered the root cause: when Fusion 360 exports
+a BRD file with components from multiple library sources, it creates duplicate
+library entries with the same name but different identifiers. Bantam's parser
+doesn't handle this correctly, causing some components to silently disappear.
+
+I reported this issue about a year ago and was told it was a known issue. Since
+it still hasn't been fixed, I decided to dig deeper and put together this
+package to help your engineering team resolve it.
+
+WHAT'S INCLUDED
+---------------
+- A clear explanation of the bug and why it happens
+- Test files that reproduce the issue
+- A working web-based repair tool (with documented source code)
+- Implementation guidance with pseudocode for your engineers
+
+I've also published the repair tool at https://bantamfix.com so other users
+can fix their files while waiting for an official fix.
+
+The fix itself is straightforward - essentially just merging same-named
+libraries when loading the file. The repair tool I built does exactly this,
+and the source code can serve as a reference implementation.
+
+WHY THIS MATTERS
+----------------
+This bug affects anyone using Fusion 360 to design PCBs for Bantam. It's
+easy to trigger accidentally, and the silent failure mode means users might
+not notice missing components until after milling. I suspect many users have
+been bitten by this without understanding why.
+
+MY ASK
+------
+Please forward this to your engineering team. I've tried to make their job
+as easy as possible by providing everything they need: root cause analysis,
+test cases, and working code they can reference.
+
+I'm happy to answer any questions or provide additional information.
+
+Thank you for your time, and thank you for making such a great machine!
+
+Best regards,
+
+[Your Name]
+[Your Email]
+[Date]
+
+
+--------------------------------------------------------------------------------
+ATTACHMENTS: bantam-bug-presentation.zip containing:
+  - 00_READ_ME_FIRST.txt (start here)
+  - 01-04 documentation files
+  - repair-tool/ (working web tool with source code)
+  - test-files/ (BRD files and screenshots to reproduce the bug)
+--------------------------------------------------------------------------------

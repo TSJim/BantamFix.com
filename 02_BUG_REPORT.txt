@@ -1,0 +1,92 @@
+================================================================================
+                              BUG REPORT
+================================================================================
+
+TITLE:        Components Missing When BRD Contains Duplicate Library Names
+SEVERITY:     High (silent data loss)
+STATUS:       Previously reported ~1 year ago, still unresolved
+
+
+ENVIRONMENT
+-----------
+Software:     Bantam Tools Desktop Milling Machine Software (macOS)
+Design Tool:  Autodesk Fusion 360 Electronics
+File Format:  EAGLE BRD (.brd)
+
+
+STEPS TO REPRODUCE
+------------------
+1. In Fusion 360 Electronics, create a PCB design
+
+2. Add pin header components from multiple sources:
+   - Add some headers from a local library
+   - Add some headers from the Autodesk cloud library
+   - (This happens naturally as users search for components)
+
+3. Export the design as a .brd file
+
+4. Import the .brd file into Bantam Tools
+
+5. OBSERVE: Some header components are missing from the preview
+
+
+EXPECTED BEHAVIOR
+-----------------
+All components defined in the BRD file should render correctly.
+
+
+ACTUAL BEHAVIOR
+---------------
+Components whose packages exist only in certain library variants fail to
+render. Specifically:
+
+  - Components using packages in the LAST same-named library: WORK
+  - Components using packages only in EARLIER same-named libraries: FAIL
+
+In the test case:
+  - All 1X02 (2-pin) headers: Render correctly
+  - All 1X04 (4-pin) headers: MISSING
+  - All 1X05 (5-pin) headers: MISSING
+
+
+ROOT CAUSE
+----------
+The BRD file contains multiple "pinhead-2" libraries (from different Fusion
+sources). Each has different packages:
+
+  Library 1 "pinhead-2" (no URN):        has 1X02, 1X04
+  Library 2 "pinhead-2" (URN: ABC...):   has 1X04, 1X05, 1X02
+  Library 3 "pinhead-2" (URN: XYZ...):   has 1X02 only
+
+Bantam's parser keeps only Library 3 (the last one), which only has 1X02.
+When it tries to find 1X04 or 1X05 packages, they don't exist in that
+library, so the components fail to render.
+
+
+WORKAROUND
+----------
+Manually edit the BRD file to consolidate same-named libraries into one.
+This is error-prone and time-consuming.
+
+A web-based repair tool is included in this package (see repair-tool/).
+
+
+TEST FILES
+----------
+Included in the test-files/ folder:
+
+  BROKEN.brd              - Original file exhibiting the bug
+  FIXED.brd               - Manually repaired file (works correctly)
+  screenshot-missing.png  - Bantam preview showing missing components
+  screenshot-annotated.png - Annotated to highlight missing areas
+
+
+SUGGESTED FIX
+-------------
+See "04_IMPLEMENTATION_GUIDE.txt" for detailed fix options.
+
+Short version: When loading libraries, merge all same-named libraries
+into one combined library containing all packages.
+
+
+================================================================================

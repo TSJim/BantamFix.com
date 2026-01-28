@@ -1,0 +1,174 @@
+================================================================================
+                          TECHNICAL ANALYSIS
+================================================================================
+
+This document explains the BRD file format, why the bug occurs, and provides
+the technical foundation for the fix.
+
+
+EAGLE BRD FILE FORMAT
+---------------------
+BRD files are XML. The relevant structure is:
+
+    <eagle>
+      <drawing>
+        <board>
+          <libraries>
+            <library name="..." urn="...">
+              <packages>
+                <package name="...">
+                  <!-- pad definitions, etc. -->
+                </package>
+              </packages>
+            </library>
+          </libraries>
+          <elements>
+            <element name="..." library="..." library_urn="..." package="..."/>
+          </elements>
+        </board>
+      </drawing>
+    </eagle>
+
+
+KEY ATTRIBUTES
+--------------
+<library> element:
+  - name (required): Library name, e.g., "pinhead-2"
+  - urn (optional):  Unique Resource Name identifying the library source
+                     e.g., "urn:adsk.wipprod:fs.file:vf.ABC123"
+
+<element> element:
+  - name (required):        Component reference designator, e.g., "J1"
+  - library (required):     Library name to look up
+  - library_urn (optional): Specific library URN to match
+  - package (required):     Package name within the library
+
+
+HOW LIBRARY MATCHING SHOULD WORK
+--------------------------------
+When resolving an element's package:
+
+1. If element has library_urn:
+   → Find library where (name == element.library) AND (urn == element.library_urn)
+
+2. If element has no library_urn:
+   → Find library where (name == element.library) AND (urn is not present)
+
+3. Within matched library, find package by name
+
+
+WHAT BANTAM CURRENTLY DOES (THE BUG)
+------------------------------------
+Based on observed behavior, Bantam's parser:
+
+1. Reads libraries into a structure keyed by name ONLY
+2. When duplicate names exist, later entries overwrite earlier ones
+3. Ignores the library_urn attribute on elements entirely
+4. Looks up packages using only the library name
+
+Result: Packages from overwritten libraries cannot be found.
+
+
+EXAMPLE FROM TEST FILE
+----------------------
+The test file contains:
+
+    <!-- Library 1: local, no URN -->
+    <library name="pinhead-2">
+      <packages>
+        <package name="1X02">...</package>
+        <package name="1X04">...</package>
+      </packages>
+    </library>
+
+    <!-- Library 2: cloud source, has URN -->
+    <library name="pinhead-2" urn="urn:adsk.wipprod:fs.file:vf.J7-PUpHbReqYYMLKpaJF5w">
+      <packages>
+        <package name="1X04">...</package>
+        <package name="1X05">...</package>
+        <package name="1X02">...</package>
+      </packages>
+    </library>
+
+    <!-- Library 3: different cloud source, has URN -->
+    <library name="pinhead-2" urn="urn:adsk.wipprod:fs.file:vf.FnfsTS4UT625C301HTQOGg">
+      <packages>
+        <package name="1X02">...</package>
+      </packages>
+    </library>
+
+Elements reference these libraries:
+
+    <!-- Should use Library 1 (no URN) - needs 1X04 -->
+    <element name="3POD-LL" library="pinhead-2" package="1X04"/>
+
+    <!-- Should use Library 2 (URN J7-PU...) - needs 1X05 -->
+    <element name="ROT-LL" library="pinhead-2"
+             library_urn="urn:adsk.wipprod:fs.file:vf.J7-PUpHbReqYYMLKpaJF5w"
+             package="1X05"/>
+
+
+WHAT GOES WRONG
+---------------
+After Bantam loads the libraries:
+
+    library_index = {
+        "pinhead-2": Library 3  // Libraries 1 and 2 were overwritten!
+    }
+
+Library 3 only contains 1X02. So:
+
+    lookup("pinhead-2", "1X02") → Found ✓
+    lookup("pinhead-2", "1X04") → NOT FOUND ✗
+    lookup("pinhead-2", "1X05") → NOT FOUND ✗
+
+Components needing 1X04 or 1X05 silently fail to render.
+
+
+CORRECT BEHAVIOR (OPTION A: FULL URN SUPPORT)
+---------------------------------------------
+Index libraries by (name, urn) tuple:
+
+    library_index = {
+        ("pinhead-2", None):        Library 1,
+        ("pinhead-2", "urn:...J7"): Library 2,
+        ("pinhead-2", "urn:...Fn"): Library 3,
+    }
+
+Look up using both library and library_urn from element:
+
+    key = (element.library, element.library_urn)  // library_urn may be None
+    lib = library_index[key]
+    pkg = lib.packages[element.package]
+
+
+CORRECT BEHAVIOR (OPTION B: MERGE LIBRARIES)
+--------------------------------------------
+When loading, merge same-named libraries:
+
+    for lib in brd.libraries:
+        if lib.name not in merged:
+            merged[lib.name] = new Library(lib.name)
+        for pkg in lib.packages:
+            merged[lib.name].packages[pkg.name] = pkg
+
+Result:
+
+    library_index = {
+        "pinhead-2": Library with packages {1X02, 1X04, 1X05}
+    }
+
+All package lookups succeed. URN traceability is lost, but Bantam doesn't
+need it anyway - it only needs the package geometry.
+
+
+RECOMMENDATION
+--------------
+Option B (merge libraries) is simpler to implement and sufficient for
+Bantam's use case. The repair tool included in this package implements
+this approach and can serve as a reference.
+
+See 04_IMPLEMENTATION_GUIDE.txt for pseudocode.
+
+
+================================================================================

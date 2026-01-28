@@ -1,0 +1,74 @@
+================================================================================
+                         EXECUTIVE SUMMARY
+================================================================================
+
+
+THE PROBLEM
+-----------
+When I import a BRD file from Fusion 360 into Bantam Tools, some of my
+components don't appear. There's no error message - they just silently
+disappear.
+
+In my case: 2-pin headers show up fine, but 4-pin and 5-pin headers vanish.
+
+
+WHY IT HAPPENS
+--------------
+Fusion 360 saves components from different library sources (local, cloud,
+team libraries) as separate entries in the BRD file, even when they have
+the same library name. It uses a "URN" identifier to tell them apart.
+
+Bantam Tools ignores these URN identifiers. When it sees multiple libraries
+with the same name, it only keeps ONE of them. Components from the
+discarded libraries fail to render.
+
+
+PROOF
+-----
+I'm including two test files:
+
+  BROKEN.brd  - My original file. Open it in Bantam - some headers are missing.
+  FIXED.brd   - Same design, libraries consolidated. All headers appear.
+
+The only difference is how the libraries are organized. Same components,
+same design, same everything else.
+
+
+THE FIX
+-------
+When Bantam loads a BRD file and finds multiple libraries with the same
+name, it should merge them together (combine all their packages) instead
+of throwing some away.
+
+I've included a working repair tool that does exactly this. The source
+code is fully documented and can serve as a reference for your engineers.
+
+WORKAROUND FOR USERS
+--------------------
+Until this is fixed in Bantam Tools, I've published the repair tool at:
+
+    https://bantamfix.com
+
+Users can upload their BRD files and download fixed versions. All processing
+happens in the browser - no files are uploaded to any server.
+
+
+IMPACT
+------
+This affects anyone using Fusion 360 to design PCBs. It's very easy to
+accidentally use components from different library sources - Fusion's
+interface doesn't make this obvious.
+
+The silent failure is especially dangerous. Users might not notice missing
+components until after they've milled their board.
+
+
+NEXT STEPS
+----------
+1. Review the test files to confirm the bug
+2. Have engineering review the technical analysis and repair tool code
+3. Implement the fix (estimated: straightforward, see implementation guide)
+4. Consider adding a warning when duplicate library names are detected
+
+
+================================================================================

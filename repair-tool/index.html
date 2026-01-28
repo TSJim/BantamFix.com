@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BantamFix - Fix Fusion 360 BRD Files for Bantam Tools</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Fix missing components in Bantam Tools when importing Fusion 360 BRD files. Free online tool that repairs the duplicate library bug causing pin headers and other parts to disappear.">
+    <meta name="keywords" content="Bantam Tools, Fusion 360, BRD file, missing components, pin headers not showing, PCB milling, EAGLE, library bug fix, Bantam CNC">
+    <meta name="author" content="BantamFix">
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="BantamFix - Fix Missing Components in Bantam Tools">
+    <meta property="og:description" content="Components disappearing when you import Fusion 360 BRD files into Bantam Tools? This free tool fixes the duplicate library bug in seconds.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bantamfix.com">
+
+    <!-- Additional SEO -->
+    <link rel="canonical" href="https://bantamfix.com">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .drop-zone {
+            border: 3px dashed #ccc;
+            border-radius: 8px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: #3498db;
+            background: #f8fbfe;
+        }
+
+        .drop-zone p {
+            margin: 0;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .drop-zone .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.visible {
+            display: block;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .details {
+            margin-top: 20px;
+        }
+
+        .details summary {
+            cursor: pointer;
+            color: #3498db;
+            font-weight: 500;
+        }
+
+        .details pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.85em;
+        }
+
+        .explanation {
+            background: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .explanation h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+
+        footer {
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 40px;
+        }
+
+        footer a {
+            color: #3498db;
+        }
+
+        .before-after {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .before-after h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .comparison-item {
+            text-align: center;
+        }
+
+        .comparison-item img {
+            width: 100%;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .comparison-item .label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .comparison-item .label.before {
+            color: #c0392b;
+        }
+
+        .comparison-item .label.after {
+            color: #27ae60;
+        }
+
+        .comparison-item .caption {
+            color: #666;
+            font-size: 0.85em;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>BantamFix</h1>
+    <p class="subtitle">Fix Fusion 360 BRD files for Bantam Tools compatibility</p>
+
+    <div class="explanation">
+        <h3>What does this tool do?</h3>
+        <p>
+            When you design a PCB in Fusion 360 and add components from different library sources,
+            Fusion saves them as separate libraries with the same name but different identifiers (URNs).
+            Bantam Tools doesn't handle this correctly, causing some components to disappear.
+        </p>
+        <p>
+            This tool consolidates duplicate libraries into one, ensuring all your components
+            render properly in Bantam Tools.
+        </p>
+        <p><strong>100% Private:</strong> Your file never leaves your computer. There's no upload - all processing happens right here in your browser. We never see your designs.</p>
+    </div>
+
+    <div class="before-after">
+        <h3>Before & After</h3>
+        <div class="comparison">
+            <div class="comparison-item">
+                <div class="label before">BEFORE (Broken)</div>
+                <img src="screenshot-before.png" alt="Bantam Tools with missing headers">
+                <div class="caption">4-pin and 5-pin headers missing</div>
+            </div>
+            <div class="comparison-item">
+                <div class="label after">AFTER (Fixed)</div>
+                <img src="screenshot-after.png" alt="Bantam Tools with all headers visible">
+                <div class="caption">All headers now render correctly</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="drop-zone" id="dropZone">
+            <div class="icon">📁</div>
+            <p>Drop your .brd file here, or click to select</p>
+            <input type="file" id="fileInput" accept=".brd">
+        </div>
+    </div>
+
+    <div class="results" id="results">
+        <div id="statusMessage"></div>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="card">
+            <button id="downloadBtn" disabled>Download Fixed BRD File</button>
+        </div>
+
+        <details class="details">
+            <summary>View detailed changes</summary>
+            <pre id="changeLog"></pre>
+        </details>
+    </div>
+
+    <footer>
+        <p>
+            This tool addresses a bug in Bantam Tools' BRD parser.
+            <a href="about.html">Learn more</a> |
+            <a href="brd-fixer.js">View source code</a>
+        </p>
+        <p style="margin-top: 10px; font-size: 0.85em;">
+            <strong>bantamfix.com</strong> - Helping Bantam users while we wait for an official fix
+        </p>
+    </footer>
+
+    <!--
+    =============================================================================
+    MAIN APPLICATION LOGIC
+    =============================================================================
+    The JavaScript below is extensively documented to serve as a reference
+    implementation for Bantam Tools' engineering team.
+
+    See brd-fixer.js for the documented source code.
+    =============================================================================
+    -->
+    <script src="brd-fixer.js"></script>
+    <script>
+        // Initialize the UI
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const results = document.getElementById('results');
+        const statusMessage = document.getElementById('statusMessage');
+        const stats = document.getElementById('stats');
+        const changeLog = document.getElementById('changeLog');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let fixedContent = null;
+        let originalFileName = null;
+
+        // Handle click on drop zone
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Handle file selection
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                processFile(e.target.files[0]);
+            }
+        });
+
+        // Handle drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) {
+                processFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Process the uploaded file
+        function processFile(file) {
+            if (!file.name.endsWith('.brd')) {
+                showError('Please select a .brd file');
+                return;
+            }
+
+            originalFileName = file.name;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const result = fixBrdFile(e.target.result);
+                    displayResults(result);
+                } catch (err) {
+                    showError('Error processing file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Display the results
+        function displayResults(result) {
+            results.classList.add('visible');
+
+            if (result.librariesMerged === 0) {
+                statusMessage.innerHTML = `
+                    <div class="warning">
+                        <strong>No changes needed!</strong><br>
+                        Your BRD file doesn't have duplicate library names.
+                        If you're still having issues with Bantam Tools, the problem may be something else.
+                    </div>
+                `;
+                downloadBtn.disabled = true;
+            } else {
+                statusMessage.innerHTML = `
+                    <div class="success">
+                        <strong>File fixed successfully!</strong><br>
+                        Consolidated ${result.librariesMerged} duplicate library group(s) and
+                        updated ${result.elementsUpdated} element reference(s).
+                    </div>
+                `;
+                fixedContent = result.fixedContent;
+                downloadBtn.disabled = false;
+            }
+
+            stats.innerHTML = `
+                <div class="stat">
+                    <div class="stat-value">${result.originalLibraryCount}</div>
+                    <div class="stat-label">Original Libraries</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${result.finalLibraryCount}</div>
+                    <div class="stat-label">After Consolidation</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${result.totalPackages}</div>
+                    <div class="stat-label">Total Packages</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${result.elementsUpdated}</div>
+                    <div class="stat-label">Elements Updated</div>
+                </div>
+            `;
+
+            changeLog.textContent = result.log.join('\n');
+        }
+
+        // Show error message
+        function showError(message) {
+            results.classList.add('visible');
+            statusMessage.innerHTML = `<div class="error">${message}</div>`;
+            stats.innerHTML = '';
+            changeLog.textContent = '';
+            downloadBtn.disabled = true;
+        }
+
+        // Handle download
+        downloadBtn.addEventListener('click', () => {
+            if (!fixedContent) return;
+
+            const blob = new Blob([fixedContent], { type: 'application/xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+
+            // Generate new filename
+            const baseName = originalFileName.replace('.brd', '');
+            a.href = url;
+            a.download = `${baseName} FIXED.brd`;
+            a.click();
+
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

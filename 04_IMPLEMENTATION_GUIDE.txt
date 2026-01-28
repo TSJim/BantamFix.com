@@ -1,0 +1,151 @@
+================================================================================
+                         IMPLEMENTATION GUIDE
+================================================================================
+
+This document provides pseudocode and guidance for fixing the BRD parser.
+
+
+RECOMMENDED FIX: MERGE SAME-NAMED LIBRARIES
+-------------------------------------------
+This is the simplest approach. When loading libraries from a BRD file,
+merge all libraries that share the same name into a single library.
+
+
+PSEUDOCODE (Python-style)
+-------------------------
+
+    def load_libraries(brd_xml):
+        """
+        Load libraries from BRD XML, merging same-named libraries.
+        """
+        merged_libraries = {}
+
+        for lib_element in brd_xml.find_all('library'):
+            name = lib_element.get_attribute('name')
+
+            # Create library if we haven't seen this name before
+            if name not in merged_libraries:
+                merged_libraries[name] = Library(name)
+
+            # Add all packages from this library variant
+            # (Later packages with same name override earlier ones)
+            for pkg_element in lib_element.find_all('package'):
+                pkg_name = pkg_element.get_attribute('name')
+                pkg_data = parse_package(pkg_element)
+                merged_libraries[name].packages[pkg_name] = pkg_data
+
+        return merged_libraries
+
+
+    def resolve_element_package(element, libraries):
+        """
+        Find the package for an element.
+        """
+        lib_name = element.get_attribute('library')
+        pkg_name = element.get_attribute('package')
+
+        # Note: We ignore library_urn since libraries are merged by name
+        library = libraries.get(lib_name)
+        if library is None:
+            return None  # Library not found
+
+        package = library.packages.get(pkg_name)
+        if package is None:
+            return None  # Package not found
+
+        return package
+
+
+ALTERNATIVE: FULL URN SUPPORT
+-----------------------------
+If you want to preserve URN traceability (not required for Bantam):
+
+
+    def load_libraries_with_urn(brd_xml):
+        """
+        Load libraries, indexing by (name, urn) tuple.
+        """
+        libraries = {}
+
+        for lib_element in brd_xml.find_all('library'):
+            name = lib_element.get_attribute('name')
+            urn = lib_element.get_attribute('urn')  # May be None
+
+            key = (name, urn)
+            libraries[key] = Library(name, urn)
+
+            for pkg_element in lib_element.find_all('package'):
+                pkg_name = pkg_element.get_attribute('name')
+                pkg_data = parse_package(pkg_element)
+                libraries[key].packages[pkg_name] = pkg_data
+
+        return libraries
+
+
+    def resolve_element_package_with_urn(element, libraries):
+        """
+        Find the package for an element, respecting library_urn.
+        """
+        lib_name = element.get_attribute('library')
+        lib_urn = element.get_attribute('library_urn')  # May be None
+        pkg_name = element.get_attribute('package')
+
+        key = (lib_name, lib_urn)
+        library = libraries.get(key)
+
+        if library is None:
+            return None
+
+        return library.packages.get(pkg_name)
+
+
+REFERENCE IMPLEMENTATION
+------------------------
+The repair-tool/ folder contains a complete JavaScript implementation
+that you can reference. Key file: brd-fixer.js
+
+The code is extensively commented and follows the same logic as the
+pseudocode above.
+
+
+TESTING YOUR FIX
+----------------
+1. Before fix: Import test-files/BROKEN.brd
+   - Expected: Some components missing (4-pin and 5-pin headers)
+
+2. After fix: Import test-files/BROKEN.brd again
+   - Expected: All components render correctly
+
+3. Verify: Compare with test-files/FIXED.brd
+   - Both files should now render identically
+
+
+EDGE CASES TO CONSIDER
+----------------------
+1. Libraries with no packages
+   - Should still be created in the index (may have symbols only)
+
+2. Package name collisions during merge
+   - Later definitions should override earlier ones
+   - This matches typical CAD tool behavior
+
+3. Empty library_urn vs. missing library_urn
+   - Treat both as "no URN" for matching purposes
+
+4. Case sensitivity
+   - Library and package names should be case-sensitive
+   - (This matches EAGLE behavior)
+
+
+OPTIONAL ENHANCEMENT: USER WARNING
+----------------------------------
+Consider showing a warning when duplicate library names are detected:
+
+    "Note: This BRD file contains multiple libraries named 'pinhead-2'.
+     Libraries have been merged for compatibility."
+
+This helps users understand why their file might look slightly different
+in Bantam vs. other tools.
+
+
+================================================================================
